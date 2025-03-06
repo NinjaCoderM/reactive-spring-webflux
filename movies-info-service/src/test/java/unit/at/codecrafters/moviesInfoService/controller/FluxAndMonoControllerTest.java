@@ -74,5 +74,21 @@ class FluxAndMonoControllerTest {
 
     @Test
     void getStream() {
+        //given
+
+        //when
+        var resultFlux =  webClient.get()
+                .uri("/flux/stream")
+                .accept(TEXT_EVENT_STREAM)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .returnResult(Integer.class).getResponseBody();
+
+        //then
+        StepVerifier.create(resultFlux)
+                .expectNext(1,2,3,4,5,6)
+                .thenCancel()
+                .verify();
     }
 }
