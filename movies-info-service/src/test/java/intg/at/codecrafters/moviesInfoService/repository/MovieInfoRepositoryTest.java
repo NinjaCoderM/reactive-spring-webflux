@@ -101,6 +101,20 @@ class MovieInfoRepositoryTest {
                 .assertNext(responseMovieInf -> Assertions.assertEquals(movieInfo.getName(), responseMovieInf.getName(), "Name should match " + movieInfo.getName()))
                 .verifyComplete();
     }
+
+    @Test
+    @Order(6)
+    @DisplayName("Test delete Method of MovieInfoRepository")
+    void delete() {
+        System.out.println("ID used " + remId);
+        Mono<MovieInfo> movieInfoMono =   movieInfoRepository.findById(remId).log();
+        var movieInfo = movieInfoMono.block();
+
+        movieInfoRepository.deleteById(Objects.requireNonNull(movieInfo).getMovieInfoId()).block();
+
+        StepVerifier.create(movieInfoRepository.findById(remId).log())
+                .verifyComplete();
+    }
 }
 
 
