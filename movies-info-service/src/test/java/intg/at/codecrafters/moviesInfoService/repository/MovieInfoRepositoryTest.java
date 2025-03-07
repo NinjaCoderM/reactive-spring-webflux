@@ -30,7 +30,7 @@ class MovieInfoRepositoryTest {
 
     //@Container
     @ServiceConnection
-    private static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:8.0.5"));
+    private final static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:8.0.5"));
 
     @Test
     @DisplayName("MongoDB container is created and running")
@@ -73,6 +73,17 @@ class MovieInfoRepositoryTest {
                 .assertNext(movieInfo -> Assertions.assertEquals(remId, movieInfo.getMovieInfoId(), "remId should match " + remId))
                 .verifyComplete();
 
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("Test save Method of MovieInfoRepository")
+    void save() {
+        var movieInfo = new MovieInfo(null, "Batman Begins xxx", 2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15"));
+        Mono<MovieInfo> responseMovieInfo = movieInfoRepository.save(movieInfo).log();
+        StepVerifier.create(responseMovieInfo)
+                .assertNext(responseMovieInf -> Assertions.assertEquals(movieInfo.getName(), responseMovieInf.getName(), "Name should match " + movieInfo.getName()))
+                .verifyComplete();
     }
 }
 
