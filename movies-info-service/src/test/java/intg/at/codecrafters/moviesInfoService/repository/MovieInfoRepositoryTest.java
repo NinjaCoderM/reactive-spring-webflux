@@ -85,6 +85,22 @@ class MovieInfoRepositoryTest {
                 .assertNext(responseMovieInf -> Assertions.assertEquals(movieInfo.getName(), responseMovieInf.getName(), "Name should match " + movieInfo.getName()))
                 .verifyComplete();
     }
+
+    @Test
+    @Order(5)
+    @DisplayName("Test update Method of MovieInfoRepository")
+    void update() {
+        System.out.println("ID used " + remId);
+        Mono<MovieInfo> movieInfoMono =   movieInfoRepository.findById(remId).log();
+        var movieInfo = movieInfoMono.block();
+        String oldName = movieInfo.getName();
+        System.out.println("oldName " + oldName);
+        movieInfo.setName("New Name");
+        Mono<MovieInfo> responseMovieInfo = movieInfoRepository.save(movieInfo).log();
+        StepVerifier.create(responseMovieInfo)
+                .assertNext(responseMovieInf -> Assertions.assertEquals(movieInfo.getName(), responseMovieInf.getName(), "Name should match " + movieInfo.getName()))
+                .verifyComplete();
+    }
 }
 
 
