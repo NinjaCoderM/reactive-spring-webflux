@@ -1,10 +1,7 @@
 package at.codecrafters.moviesInfoService.repository;
 
 import at.codecrafters.moviesInfoService.domain.MovieInfo;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -13,17 +10,23 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @Testcontainers
 @DataMongoTest
 @ActiveProfiles("test")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MovieInfoRepositoryTest {
 
     @Autowired private MovieInfoRepository movieInfoRepository;
+
+    private String remId;
 
     //@Container
     @ServiceConnection
@@ -31,6 +34,7 @@ class MovieInfoRepositoryTest {
 
     @Test
     @DisplayName("MongoDB container is created and running")
+    @Order(1)
     void testContainerIsRunning(){
         Assertions.assertTrue(mongoDBContainer.isCreated(), "MongoDB container is not created");
         Assertions.assertTrue(mongoDBContainer.isRunning(), "MongoDB container is not running");
@@ -46,13 +50,28 @@ class MovieInfoRepositoryTest {
                 .blockLast(); // nur bei Tests erlaubt
     }
 
+    @Order(2)
     @Test
+    @DisplayName("Test findAll Method of MovieInfoRepository")
     void findAll() {
         Flux<MovieInfo> all =   movieInfoRepository.findAll().log();
         StepVerifier.create(all)
                 .assertNext(Assertions::assertNotNull)
                 .thenCancel()
                 .verify();
+        remId = Objects.requireNonNull(all.blockFirst()).getMovieInfoId();
+        System.out.println("ID stored " + remId);
+    }
+
+    @Test
+    @Order(3)
+    @DisplayName("Test findById Method of MovieInfoRepository")
+    void findById() {
+        System.out.println("ID used " + remId);
+        Mono<MovieInfo> movieInfoMono =   movieInfoRepository.findById(remId).log();
+        StepVerifier.create(movieInfoMono)
+                .assertNext(movieInfo -> Assertions.assertEquals(remId, movieInfo.getMovieInfoId(), "remId should match " + remId))
+                .verifyComplete();
 
     }
 }
