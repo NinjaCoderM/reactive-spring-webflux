@@ -1,0 +1,33 @@
+I try to use the latest versions whenever possible. You learn a lot along the way. Here’s what I found when upgrading to Spring Boot 3:
+
+Dependencies in build.gradle
+
+implementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo.spring30x:4.6.2'
+
+Annotation
+
+@DataMongoTest(properties = "de.flapdoodle.mongodb.embedded.version=5.0.5")
+
+However, I couldn't determine the last stable versions for this combination.
+
+That's why I switched to Testcontainers:
+
+Dependencies in build.gradle
+
+testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+testImplementation 'org.testcontainers:junit-jupiter'
+testImplementation 'org.testcontainers:mongodb'
+
+Test class:
+
+@Testcontainers
+@DataMongoTest
+@ActiveProfiles("test")
+class MovieInfoRepositoryTest {
+
+    @ServiceConnection
+    private static MongoDBContainer mongoDBContainer =
+        new MongoDBContainer(DockerImageName.parse("mongo:8.0.5"));
+
+    ...
+}
