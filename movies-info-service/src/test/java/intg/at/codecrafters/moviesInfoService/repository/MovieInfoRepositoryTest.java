@@ -27,7 +27,7 @@ class MovieInfoRepositoryTest {
 
     //@Container
     @ServiceConnection
-    private static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.0.10"));
+    private static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:8.0.5"));
 
     @Test
     @DisplayName("MongoDB container is created and running")
