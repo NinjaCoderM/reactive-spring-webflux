@@ -3,25 +3,39 @@ package at.codecrafters.moviesInfoService.repository;
 import at.codecrafters.moviesInfoService.domain.MovieInfo;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
 import java.util.List;
 
-
-@DataMongoTest( properties = "de.flapdoodle.mongodb.embedded.version=5.0.5")
-@ExtendWith(SpringExtension.class)
+@Testcontainers
+@DataMongoTest
 @ActiveProfiles("test")
 class MovieInfoRepositoryTest {
 
     @Autowired private MovieInfoRepository movieInfoRepository;
+
+    //@Container
+    @ServiceConnection
+    private static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.0.10"));
+
+    @Test
+    @DisplayName("MongoDB container is created and running")
+    void testContainerIsRunning(){
+        Assertions.assertTrue(mongoDBContainer.isCreated(), "MongoDB container is not created");
+        Assertions.assertTrue(mongoDBContainer.isRunning(), "MongoDB container is not running");
+
+    }
 
     @BeforeEach
     void setUp() {
