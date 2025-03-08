@@ -1,6 +1,7 @@
 package at.codecrafters.moviesInfoService.controller;
 
 import at.codecrafters.moviesInfoService.domain.MovieInfo;
+import at.codecrafters.moviesInfoService.repository.MovieInfoRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,13 +22,25 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+//@AutoConfigureWebTestClient
 class MoviesInfoControllerIntgTest {
 
     @Autowired
     private WebTestClient webTestClient;
 
+    @Autowired private MovieInfoRepository movieInfoRepository;
+
     @ServiceConnection
     private final static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:8.0.5"));
+
+    @BeforeEach
+    void setUp() {
+        var movieInfos = List.of(new MovieInfo(null, "Batman Begins", 2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15")),
+                new MovieInfo(null,"The Dark Knight", 2008, List.of("Christian Bale", "HeathLedger"), LocalDate.parse("2008-07-18")),
+                new MovieInfo("abc","Dark Knight Rises", 2008, List.of("Christian Bale", "Tom Hardy"), LocalDate.parse("2012-07-20")));
+        movieInfoRepository.saveAll(movieInfos)
+                .blockLast(); // nur bei Tests erlaubt
+    }
 
     @DisplayName("Add Movie Controller Test")
     @Test
@@ -59,4 +72,112 @@ class MoviesInfoControllerIntgTest {
                 .verifyComplete();
 
     }
+
+    @DisplayName("findAll MovieInfo Controller Test")
+    @Test
+    void getAllMovieInfos() {
+        //given
+        //when
+        var respMovieInfo = webTestClient
+                .get()
+                .uri("/v1/movieinfos")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .returnResult(MovieInfo.class);
+        // ohne returnResult
+        // auch  .expectBodyList(MovieInfo.class)
+        // auch  .hasSize(3);
+
+        //then
+        StepVerifier.create(respMovieInfo.getResponseBody())
+                .expectNextCount(3)
+                .verifyComplete();
+
+    }
+
+    @DisplayName("findById MovieInfo Controller Test")
+    @Test
+    void getMovieInfoById() {
+        //given
+        var id = "abc";
+        //when
+        var respMovieInfo = webTestClient
+                .get()
+                // auch .uri("/v1/movieinfos/"+id)
+                .uri("/v1/movieinfos/{id}", id)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .returnResult(MovieInfo.class);
+        //then
+        StepVerifier.create(respMovieInfo.getResponseBody())
+                .assertNext(movieInfo -> {
+                    Assertions.assertEquals("Dark Knight Rises", movieInfo.getName(), "should be equal");
+                } )
+                .verifyComplete();
+
+        //Testen mit jsonPath
+        var respMovieInfo2 = webTestClient
+                .get()
+                // auch .uri("/v1/movieinfos/"+id)
+                .uri("/v1/movieinfos/{id}", id)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody()
+                .jsonPath("$.name").isEqualTo("Dark Knight Rises");
+
+    }
+
+    @DisplayName("Update MovieInfo Controller Test")
+    @Test
+    void updateMovieInfo() {
+        //given
+        var id = "abc";
+        var mInfo = new MovieInfo("abc","Dark Knight Rises 2", 2008, List.of("Christian Bale", "Tom Hardy"), LocalDate.parse("2012-07-20"));
+        //when
+        var respMovieInfo = webTestClient
+                .put()
+                .uri("/v1/movieinfos/{id}", id)
+                .bodyValue(mInfo)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .returnResult(MovieInfo.class);
+
+        //then
+        StepVerifier.create(respMovieInfo.getResponseBody())
+                .assertNext(movieInfo -> {
+                    assertNotNull(movieInfo);
+                    Assertions.assertEquals("Dark Knight Rises 2", movieInfo.getName(), "Name should match");
+                })
+                .verifyComplete();
+
+    }
+
+    @DisplayName("Delete MovieInfo Controller Test")
+    @Test
+    void deleteMovieInfo() {
+        //given
+        var id = "abc";
+        //when
+        webTestClient
+                .delete()
+                .uri("/v1/movieinfos/{id}", id)
+                .exchange()
+                .expectStatus()
+                .isNoContent()
+                .returnResult(Void.class)
+                .getResponseBody()
+                .blockLast();
+
+        webTestClient
+                .get()
+                .uri("/v1/movieinfos/{id}", id)
+                .exchange()
+                .expectStatus()
+                .isNotFound();
+    }
+
 }
