@@ -14,10 +14,10 @@ public class ReviewRouter {
     @Bean
     public RouterFunction<ServerResponse> reviewsRoutes(ReviewHandler reviewHandler) {
         return route()
-                .nest(path("/v1/reviews"), builder -> {
-                    builder .POST("", reviewHandler::addReview)
-                            .GET("", reviewHandler::getReviews);
-                })
+                .nest(path("/v1/reviews"), builder -> builder
+                        .POST("", reviewHandler::addReview)
+                        .GET("", reviewHandler::getReviews)
+                        .PUT("/{id}", reviewHandler::updateReview))
                 .GET("/v1/helloworld", (request -> ServerResponse.ok().bodyValue("helloworld")))
                 .build();
     }

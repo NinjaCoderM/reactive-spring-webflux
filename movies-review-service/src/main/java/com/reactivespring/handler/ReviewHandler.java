@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 public class ReviewHandler {
     private final ReviewReactiveRepository repo;
 
-    public ReviewHandler(ReviewReactiveRepository repo, ReviewReactiveRepository reviewReactiveRepository) {
+    public ReviewHandler(ReviewReactiveRepository repo) {
         this.repo = repo;
     }
 
@@ -25,5 +25,18 @@ public class ReviewHandler {
     public Mono<ServerResponse> getReviews(ServerRequest request) {
         var reviewsFlux = repo.findAll();
         return ServerResponse.ok().body(reviewsFlux, Review.class);
+    }
+
+    public Mono<ServerResponse> updateReview(ServerRequest request) {
+        var existingReview = repo.findById(request.pathVariable("id"));
+        return existingReview.flatMap(review -> {
+            return request.bodyToMono(Review.class).map(reqReview -> {
+                review.setComment(reqReview.getComment());
+                review.setRating(reqReview.getRating());
+                return review;
+            })
+            .flatMap(repo::save)
+            .flatMap(savedResponse-> ServerResponse.ok().body(savedResponse, Review.class));
+        });
     }
 }
