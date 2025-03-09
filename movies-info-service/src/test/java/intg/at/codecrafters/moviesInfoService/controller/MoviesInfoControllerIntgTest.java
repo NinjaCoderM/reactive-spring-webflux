@@ -4,6 +4,7 @@ import at.codecrafters.moviesInfoService.domain.MovieInfo;
 import at.codecrafters.moviesInfoService.repository.MovieInfoRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
@@ -24,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-//@AutoConfigureWebTestClient
+@AutoConfigureWebTestClient
 class MoviesInfoControllerIntgTest {
 
     @Autowired
@@ -114,9 +115,6 @@ class MoviesInfoControllerIntgTest {
                 .expectStatus()
                 .isOk()
                 .returnResult(MovieInfo.class);
-        // ohne returnResult
-        // auch  .expectBodyList(MovieInfo.class)
-        // auch  .hasSize(3);
 
         //then
         StepVerifier.create(respMovieInfo.getResponseBody())
