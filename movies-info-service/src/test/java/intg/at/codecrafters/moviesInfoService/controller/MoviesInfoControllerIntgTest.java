@@ -128,6 +128,22 @@ class MoviesInfoControllerIntgTest {
 
     }
 
+    @DisplayName("findById MovieInfo Intg Test Fail")
+    @Test
+    void getMovieInfoById_whenIdNotFound() {
+        //given
+        var id = "abcx";
+        //when
+        webTestClient
+                .get()
+                // auch .uri("/v1/movieinfos/"+id)
+                .uri("/v1/movieinfos/{id}", id)
+                .exchange()
+                .expectStatus()
+                .isNotFound();
+
+    }
+
     @DisplayName("Update MovieInfo Controller Test")
     @Test
     void updateMovieInfo() {
@@ -151,6 +167,24 @@ class MoviesInfoControllerIntgTest {
                     Assertions.assertEquals("Dark Knight Rises 2", movieInfo.getName(), "Name should match");
                 })
                 .verifyComplete();
+
+    }
+
+    @DisplayName("Update MovieInfo Controller Test Fail")
+    @Test
+    void updateMovieInfo_whenIdNotFound() {
+        //given
+        var id = "abcx";
+        var mInfo = new MovieInfo("abcx","Dark Knight Rises 2", 2008, List.of("Christian Bale", "Tom Hardy"), LocalDate.parse("2012-07-20"));
+        //when
+        webTestClient
+                .put()
+                .uri("/v1/movieinfos/{id}", id)
+                .bodyValue(mInfo)
+                .exchange()
+                .expectStatus()
+                .isNotFound();
+
 
     }
 
