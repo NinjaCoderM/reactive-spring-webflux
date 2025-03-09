@@ -123,6 +123,28 @@ class MoviesInfoControllerIntgTest {
 
     }
 
+    @DisplayName("findByName MovieInfo Intg Test")
+    @Test
+    void getMovieInfoByName() {
+        //given
+        URI uri = UriComponentsBuilder.fromUriString("/v1/movieinfos")
+                .queryParam("name", "The Dark Knight")
+                .buildAndExpand().toUri();
+        //when
+        var respMovieInfo = webTestClient
+                .get()
+                .uri(uri)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .returnResult(MovieInfo.class);
+        //then
+        StepVerifier.create(respMovieInfo.getResponseBody())
+                .expectNextCount(1)
+                .verifyComplete();
+
+    }
+
     @DisplayName("findById MovieInfo Controller Test")
     @Test
     void getMovieInfoById() {

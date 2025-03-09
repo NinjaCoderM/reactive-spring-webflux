@@ -27,9 +27,16 @@ public class MoviesInfoController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Flux<MovieInfo> getAllMovieInfos(@RequestParam(value = "year", required = false) Integer year) {
+    public Flux<MovieInfo> getAllMovieInfos(@RequestParam(value = "year", required = false) Integer year, @RequestParam(value = "name", required = false) String name) {
         if (year != null) {
+            if(name != null) {
+                return movieInfoService.getMovieInfoByYear(year)
+                        .filter(movieInfo -> movieInfo.getName().equals(name));
+            }
             return movieInfoService.getMovieInfoByYear(year);
+        }
+        if (name != null) {
+            return movieInfoService.findMovieInfoByName(name);
         }
         return movieInfoService.allMovieInfos();
     }
