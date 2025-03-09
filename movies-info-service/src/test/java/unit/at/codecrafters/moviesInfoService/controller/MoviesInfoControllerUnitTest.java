@@ -61,7 +61,7 @@ public class MoviesInfoControllerUnitTest {
         var mInfo = new MovieInfo(null, null, -2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15"));
         //when
 
-        var respMovieInfo = webTestClient
+        webTestClient
                 .post()
                 .uri("/v1/movieinfos")
                 .bodyValue(mInfo)
