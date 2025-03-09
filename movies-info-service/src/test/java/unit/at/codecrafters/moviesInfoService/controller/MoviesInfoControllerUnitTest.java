@@ -56,9 +56,9 @@ public class MoviesInfoControllerUnitTest {
 
     @Test
     @DisplayName("Test addMovieInfo validation")
-    void testAddMovieInfo_whenNameisNull() {
+    void testAddMovieInfo_whenValidationExceptionThrown() {
         //given
-        var mInfo = new MovieInfo(null, null, -2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15"));
+        var mInfo = new MovieInfo(null, null, -2005, List.of(""), LocalDate.parse("2005-06-15"));
         //when
 
         webTestClient
@@ -71,7 +71,7 @@ public class MoviesInfoControllerUnitTest {
                 .expectBody(String.class)
                 .consumeWith(stringEntityExchangeResult -> {
                     var error = stringEntityExchangeResult.getResponseBody();
-                    Assertions.assertEquals("movieInfo.name must be present, movieInfo.year must be a positive value", error);
+                    Assertions.assertEquals("movieInfo.cast must be present, movieInfo.name must be present, movieInfo.year must be a positive value", error);
                 });
         //then
 

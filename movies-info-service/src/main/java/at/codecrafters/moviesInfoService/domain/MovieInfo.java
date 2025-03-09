@@ -1,6 +1,7 @@
 package at.codecrafters.moviesInfoService.domain;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
@@ -23,7 +24,8 @@ public class MovieInfo {
     @NotNull
     @Positive(message="movieInfo.year must be a positive value")
     private Integer year;
-    private List<String> cast;
+    @NotEmpty(message="movieInfo.cast must be present")
+    private List<@NotBlank(message="movieInfo.cast must be present")String> cast;
     private LocalDate release_date;
 
     @PersistenceCreator
