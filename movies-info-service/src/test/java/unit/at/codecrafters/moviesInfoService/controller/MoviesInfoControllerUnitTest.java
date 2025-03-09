@@ -54,6 +54,29 @@ public class MoviesInfoControllerUnitTest {
                 .verifyComplete();
     }
 
+    @Test
+    @DisplayName("Test addMovieInfo validation")
+    void testAddMovieInfo_whenNameisNull() {
+        //given
+        var mInfo = new MovieInfo(null, null, -2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15"));
+        //when
+
+        var respMovieInfo = webTestClient
+                .post()
+                .uri("/v1/movieinfos")
+                .bodyValue(mInfo)
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody(String.class)
+                .consumeWith(stringEntityExchangeResult -> {
+                    var error = stringEntityExchangeResult.getResponseBody();
+                    Assertions.assertEquals("movieInfo.name must be present, movieInfo.year must be a positive value", error);
+                });
+        //then
+
+    }
+
     @DisplayName("findAll MovieInfo Unit Test")
     @Test
     void getAllMovieInfos() {

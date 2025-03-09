@@ -2,6 +2,7 @@ package at.codecrafters.moviesInfoService.controller;
 
 import at.codecrafters.moviesInfoService.domain.MovieInfo;
 import at.codecrafters.moviesInfoService.service.MovieInfoService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,7 +21,7 @@ public class MoviesInfoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<MovieInfo> addMovieInfo(@RequestBody MovieInfo movieInfo) {
+    public Mono<MovieInfo> addMovieInfo(@RequestBody @Valid MovieInfo movieInfo) {
         return movieInfoService.addMovieInfo(movieInfo);
     }
 
