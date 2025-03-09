@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/v1/movieinfos")
 public class MoviesInfoController {
 
-    private MovieInfoService movieInfoService;
+    private final MovieInfoService movieInfoService;
 
     public MoviesInfoController(MovieInfoService movieInfoService) {
         this.movieInfoService = movieInfoService;
