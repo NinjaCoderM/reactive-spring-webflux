@@ -112,13 +112,11 @@ class MoviesInfoControllerIntgTest {
                 .returnResult(MovieInfo.class);
         //then
         StepVerifier.create(respMovieInfo.getResponseBody())
-                .assertNext(movieInfo -> {
-                    Assertions.assertEquals("Dark Knight Rises", movieInfo.getName(), "should be equal");
-                } )
+                .assertNext(movieInfo -> Assertions.assertEquals("Dark Knight Rises", movieInfo.getName(), "should be equal"))
                 .verifyComplete();
 
         //Testen mit jsonPath
-        var respMovieInfo2 = webTestClient
+        webTestClient
                 .get()
                 // auch .uri("/v1/movieinfos/"+id)
                 .uri("/v1/movieinfos/{id}", id)

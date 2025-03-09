@@ -1,10 +1,8 @@
 package at.codecrafters.moviesInfoService.controller;
 
 import at.codecrafters.moviesInfoService.domain.MovieInfo;
-import at.codecrafters.moviesInfoService.repository.MovieInfoRepository;
 import at.codecrafters.moviesInfoService.service.MovieInfoService;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
