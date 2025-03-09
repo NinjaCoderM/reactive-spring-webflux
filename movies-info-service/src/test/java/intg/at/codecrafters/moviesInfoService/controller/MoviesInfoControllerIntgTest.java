@@ -8,11 +8,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import reactor.test.StepVerifier;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -92,6 +94,33 @@ class MoviesInfoControllerIntgTest {
         //then
         StepVerifier.create(respMovieInfo.getResponseBody())
                 .expectNextCount(3)
+                .verifyComplete();
+
+    }
+
+    @DisplayName("findByYear MovieInfo Intg Test")
+    @Test
+    void getAllMovieInfosByYear() {
+        //given
+        URI uri = UriComponentsBuilder.fromUriString("/v1/movieinfos")
+                .queryParam("year", 2008)
+                .buildAndExpand().toUri();
+        //when
+        var respMovieInfo = webTestClient
+                .get()
+                //.uri("/v1/movieinfos?year=2008")
+                .uri(uri)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .returnResult(MovieInfo.class);
+        // ohne returnResult
+        // auch  .expectBodyList(MovieInfo.class)
+        // auch  .hasSize(3);
+
+        //then
+        StepVerifier.create(respMovieInfo.getResponseBody())
+                .expectNextCount(2)
                 .verifyComplete();
 
     }

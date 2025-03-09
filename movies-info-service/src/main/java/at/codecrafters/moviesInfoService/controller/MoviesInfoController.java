@@ -6,7 +6,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -28,7 +27,10 @@ public class MoviesInfoController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public Flux<MovieInfo> getAllMovieInfos() {
+    public Flux<MovieInfo> getAllMovieInfos(@RequestParam(value = "year", required = false) Integer year) {
+        if (year != null) {
+            return movieInfoService.getMovieInfoByYear(year);
+        }
         return movieInfoService.allMovieInfos();
     }
 
