@@ -121,7 +121,7 @@ public class ReviewRouterTest {
 
     @DisplayName("Update Review Intg Test PUT Endpoint")
     @Test
-    void updateMovieInfo() {
+    void updateReview() {
         //given
         var id = "abc";
         var reviewUpdate = new Review("abc", 2L, "Excellent Movie+", 8.8);
@@ -142,6 +142,25 @@ public class ReviewRouterTest {
                     Assertions.assertEquals(reviewUpdate.getComment(), review.getComment(), "Name should match");
                 })
                 .verifyComplete();
+
+    }
+
+    @DisplayName("Update Review Intg Test PUT Endpoint")
+    @Test
+    void updateReview_whenIdNotFound() {
+        //given
+        var id = "xyz";
+        var reviewUpdate = new Review("abc", 2L, "Excellent Movie+", 8.8);
+        //when
+        var respReview = webTestClient
+                .put()
+                .uri(REVIEWS_URL+"/{id}", id)
+                .bodyValue(reviewUpdate)
+                .exchange()
+                .expectStatus()
+                .isNotFound()
+                .expectBody(String.class)
+                .isEqualTo("Review not found for the given Review id: xyz");
 
     }
 

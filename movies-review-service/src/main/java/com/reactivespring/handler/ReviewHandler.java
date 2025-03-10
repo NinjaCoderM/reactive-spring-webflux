@@ -2,6 +2,7 @@ package com.reactivespring.handler;
 
 import com.reactivespring.domain.Review;
 import com.reactivespring.exception.ReviewDataException;
+import com.reactivespring.exception.ReviewNotFoundException;
 import com.reactivespring.repository.ReviewReactiveRepository;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -62,7 +63,8 @@ public class ReviewHandler {
     }
 
     public Mono<ServerResponse> updateReview(ServerRequest request) {
-        var existingReview = repo.findById(request.pathVariable("id"));
+        var existingReview = repo.findById(request.pathVariable("id"))
+                .switchIfEmpty(Mono.error(new ReviewNotFoundException("Review not found for the given Review id: " + request.pathVariable("id"))));
         return existingReview.flatMap(review -> {
             return request.bodyToMono(Review.class).map(reqReview -> {
                 review.setComment(reqReview.getComment());
