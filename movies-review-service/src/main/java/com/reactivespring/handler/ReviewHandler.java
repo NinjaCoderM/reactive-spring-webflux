@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
@@ -23,8 +24,13 @@ public class ReviewHandler {
     }
 
     public Mono<ServerResponse> getReviews(ServerRequest request) {
-        var reviewsFlux = repo.findAll();
-        return ServerResponse.ok().body(reviewsFlux, Review.class);
+        var moviesInfoId = request.queryParam("movieInfoId");
+        if (moviesInfoId.isPresent()) {
+            return repo.findByMovieInfoId(Long.valueOf(moviesInfoId.get())).collectList().flatMap(reviews -> ServerResponse.ok().body(Flux.fromIterable(reviews), Review.class));
+        } else {
+            var reviewsFlux = repo.findAll();
+            return ServerResponse.ok().body(reviewsFlux, Review.class);
+        }
     }
 
     public Mono<ServerResponse> updateReview(ServerRequest request) {
@@ -36,7 +42,7 @@ public class ReviewHandler {
                 return review;
             })
             .flatMap(repo::save)
-            .flatMap(savedResponse-> ServerResponse.ok().body(savedResponse, Review.class));
+            .flatMap(savedResponse-> ServerResponse.ok().body(Mono.just(savedResponse), Review.class));
         });
     }
 
@@ -48,8 +54,4 @@ public class ReviewHandler {
                 .then(ServerResponse.noContent().build());
     }
 
-    public Mono<ServerResponse> getReviewsById(ServerRequest request) {
-        var id = request.pathVariable("id");
-        return repo.findById(id).flatMap(review -> ServerResponse.ok().body(review, Review.class));
-    }
 }
