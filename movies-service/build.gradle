@@ -25,8 +25,20 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
+	testImplementation 'org.mockito:mockito-inline:5.2.0'
 }
 
 test {
 	useJUnitPlatform()
+}
+
+test {
+	useJUnitPlatform()
+	jvmArgs("-javaagent:${configurations.testRuntimeClasspath.find { it.name.contains('mockito-core') }?.absolutePath}")
+}
+
+sourceSets {
+	test {
+		java.srcDirs = ['src/test/java/unit', 'src/test/java/intg']
+	}
 }
