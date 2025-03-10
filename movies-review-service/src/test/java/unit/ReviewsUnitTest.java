@@ -23,7 +23,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @WebFluxTest
-@ContextConfiguration(classes = {ReviewRouter.class, ReviewHandler.class})
+@ContextConfiguration(classes = {ReviewRouter.class, ReviewHandler.class, GlobalErrorHandler.class})
 @AutoConfigureWebTestClient
 public class ReviewsUnitTest {
     //@MockitoBean
@@ -61,6 +61,28 @@ public class ReviewsUnitTest {
                     Assertions.assertEquals(reviewIn.getComment(), review.getComment(), "Comment should match");
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    @DisplayName("Test addReview Unit Test when Data is not valid")
+    void addReview_validation() {
+        //given
+        var review = new Review(null, null, "Awesome Movie", -9.0);
+
+        Mockito.when(reviewReactiveRepository.save(Mockito.isA(Review.class)))
+                .thenReturn(Mono.just(new Review("abc", 1L, "Awesome Movie", 9.0)));
+
+        //when
+
+        webTestClient
+                .post()
+                .uri(REVIEWS_URL)
+                .bodyValue(review)
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody(String.class)
+                .isEqualTo("rating.movieInfoId: must not be null,rating.negative : rating is negative and please pass a non-negative value");
     }
 
     @DisplayName("findAll Reviews Unit Test")
