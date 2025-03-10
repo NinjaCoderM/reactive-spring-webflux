@@ -1,5 +1,7 @@
 import com.reactivespring.domain.Review;
+import com.reactivespring.exceptionHandler.GlobalErrorHandler;
 import com.reactivespring.handler.ReviewHandler;
+import com.reactivespring.repository.ReviewReactiveRepository;
 import com.reactivespring.router.ReviewRouter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -8,14 +10,12 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.reactive.function.server.ServerRequest;
-import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import java.net.URI;
 import java.util.List;
@@ -26,8 +26,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @ContextConfiguration(classes = {ReviewRouter.class, ReviewHandler.class})
 @AutoConfigureWebTestClient
 public class ReviewsUnitTest {
+    //@MockitoBean
+    //private ReviewHandler reviewHandler;
+
     @MockitoBean
-    private ReviewHandler reviewHandler;
+    private ReviewReactiveRepository reviewReactiveRepository;
 
     @Autowired
     private WebTestClient webTestClient;
@@ -36,12 +39,12 @@ public class ReviewsUnitTest {
 
     @Test
     @DisplayName("Test addReview Unit Test")
-    void testAddMovieInfo() {
+    void testAddReview() {
         //given
         var reviewIn = new Review(null, 1L, "Awesome Movie+", 9.0);
         //when
-        Mockito.when(reviewHandler.addReview(Mockito.any(ServerRequest.class)))
-                .thenReturn(ServerResponse.status(HttpStatus.CREATED).bodyValue(reviewIn));
+        Mockito.when(reviewReactiveRepository.save(Mockito.any(Review.class)))
+                .thenReturn(Mono.just(new Review("abc", 1L, "Awesome Movie+", 9.0)));
 
         var respReview = webTestClient
                 .post()
@@ -69,8 +72,7 @@ public class ReviewsUnitTest {
                 new Review(null, 1L, "Awesome Movie1", 9.0),
                 new Review("abc", 2L, "Excellent Movie", 8.0));
         //when
-        Mockito.when(reviewHandler.getReviews(Mockito.any(ServerRequest.class)))
-                .thenReturn(ServerResponse.ok().bodyValue(reviewsList));
+        Mockito.when(reviewReactiveRepository.findAll()).thenReturn(Flux.fromIterable(reviewsList));
 
         var respMovieInfo = webTestClient
                 .get()
@@ -94,8 +96,10 @@ public class ReviewsUnitTest {
         var id = "abc";
         var reviewIn = new Review("abc", 1L, "Awesome Movie+", 9.9);
 
-        Mockito.when(reviewHandler.updateReview(Mockito.any(ServerRequest.class)))
-                .thenReturn(ServerResponse.ok().bodyValue(reviewIn));
+        Mockito.when(reviewReactiveRepository.findById(Mockito.any(String.class)))
+                .thenReturn(Mono.just(reviewIn));
+
+        Mockito.when(reviewReactiveRepository.save(Mockito.any(Review.class))).thenReturn(Mono.just(reviewIn));
 
         //when
         var respReview = webTestClient
@@ -122,8 +126,13 @@ public class ReviewsUnitTest {
     void deleteMovieInfo() {
         //given
         var id = "abc";
-        Mockito.when(reviewHandler.deleteReview(Mockito.any(ServerRequest.class)))
-                .thenReturn(ServerResponse.noContent().build());
+        var reviewIn = new Review("abc", 1L, "Awesome Movie+", 9.9);
+
+        Mockito.when(reviewReactiveRepository.findById(Mockito.any(String.class)))
+                .thenReturn(Mono.just(reviewIn));
+        Mockito.when(reviewReactiveRepository.deleteById(Mockito.any(String.class)))
+                .thenReturn(Mono.empty());
+
         //when
         webTestClient
                 .delete()
@@ -144,9 +153,8 @@ public class ReviewsUnitTest {
         URI uri = UriComponentsBuilder.fromUriString(REVIEWS_URL)
                 .queryParam("movieInfoId", "1")
                 .buildAndExpand().toUri();
-        Mockito.when(reviewHandler.getReviews(Mockito.any(ServerRequest.class)))
-                .thenReturn(ServerResponse.ok().body(Flux.fromIterable(reviewsList), Review.class));
 
+        Mockito.when(reviewReactiveRepository.findByMovieInfoId(Mockito.anyLong())).thenReturn(Flux.fromIterable(reviewsList));
         //when
         var respReview = webTestClient
                 .get()
