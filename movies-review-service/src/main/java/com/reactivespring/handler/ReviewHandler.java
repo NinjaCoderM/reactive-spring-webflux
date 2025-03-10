@@ -47,4 +47,9 @@ public class ReviewHandler {
                 .flatMap(review -> repo.deleteById(id))
                 .then(ServerResponse.noContent().build());
     }
+
+    public Mono<ServerResponse> getReviewsById(ServerRequest request) {
+        var id = request.pathVariable("id");
+        return repo.findById(id).flatMap(review -> ServerResponse.ok().body(review, Review.class));
+    }
 }
