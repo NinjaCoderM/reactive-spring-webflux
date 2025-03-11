@@ -14,7 +14,6 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import reactor.test.StepVerifier;
-
 import java.net.URI;
 import java.time.LocalDate;
 import java.util.List;
@@ -38,6 +37,9 @@ class MoviesInfoControllerIntgTest {
 
     @BeforeEach
     void setUp() {
+//        webTestClient = webTestClient.mutate()
+//                .responseTimeout(Duration.ofSeconds(20)) // Timeout auf 10 Sekunden setzen
+//                .build();
         var movieInfos = List.of(new MovieInfo(null, "Batman Begins", 2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15")),
                 new MovieInfo(null,"The Dark Knight", 2008, List.of("Christian Bale", "HeathLedger"), LocalDate.parse("2008-07-18")),
                 new MovieInfo("abc","Dark Knight Rises", 2008, List.of("Christian Bale", "Tom Hardy"), LocalDate.parse("2012-07-20")));
@@ -259,6 +261,38 @@ class MoviesInfoControllerIntgTest {
                 .exchange()
                 .expectStatus()
                 .isNotFound();
+    }
+
+    @DisplayName("Add Movie and use Stream")
+    @Test
+    void getAllMovies_stream() {
+        //given
+        var mInfo = new MovieInfo(null, "xxxBatman Begins", 2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15"));
+        //when
+        webTestClient
+                .post()
+                .uri("/v1/movieinfos")
+                .bodyValue(mInfo)
+                .exchange()
+                .expectStatus()
+                .isCreated()
+                .returnResult(MovieInfo.class);
+        //when
+        var respMovieInfo = webTestClient
+                .get()
+                .uri("/v1/movieinfos/stream")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .returnResult(MovieInfo.class);
+        //then
+        StepVerifier.create(respMovieInfo.getResponseBody())
+                .assertNext(movieInfo -> {
+                    assertNotNull(movieInfo);
+                })
+                .thenCancel()
+                .verify();
+
     }
 
 }

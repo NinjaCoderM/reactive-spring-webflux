@@ -4,16 +4,20 @@ import at.codecrafters.moviesInfoService.domain.MovieInfo;
 import at.codecrafters.moviesInfoService.service.MovieInfoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 @RestController
 @RequestMapping("/v1/movieinfos")
 public class MoviesInfoController {
 
     private final MovieInfoService movieInfoService;
+
+    private Sinks.Many<MovieInfo> movieInfoSink = Sinks.many().replay().all();
 
     public MoviesInfoController(MovieInfoService movieInfoService) {
         this.movieInfoService = movieInfoService;
@@ -22,7 +26,8 @@ public class MoviesInfoController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<MovieInfo> addMovieInfo(@RequestBody @Valid MovieInfo movieInfo) {
-        return movieInfoService.addMovieInfo(movieInfo);
+        return movieInfoService.addMovieInfo(movieInfo)
+                .doOnNext(savedMovieInfo -> movieInfoSink.tryEmitNext(savedMovieInfo));
     }
 
     @GetMapping
@@ -52,6 +57,11 @@ public class MoviesInfoController {
         return movieInfoService.findMovieInfoById(id)
                 .map(ResponseEntity.ok()::body)
                 .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public Flux<MovieInfo> getPostedMovieStream() {
+        return movieInfoSink.asFlux();
     }
 
 //    @PutMapping("/{id}")
