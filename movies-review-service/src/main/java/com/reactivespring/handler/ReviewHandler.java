@@ -9,11 +9,14 @@ import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
+
 import java.util.stream.Collectors;
 
 @Component
@@ -25,6 +28,8 @@ public class ReviewHandler {
 
     private final ReviewReactiveRepository repo;
 
+    private Sinks.Many<Review> reviewSink = Sinks.many().replay().latest();
+
     public ReviewHandler(ReviewReactiveRepository repo) {
         this.repo = repo;
     }
@@ -33,6 +38,7 @@ public class ReviewHandler {
         return request.bodyToMono(Review.class).log()
                 .doOnNext(this::validate)
                 .flatMap(repo::save)
+                .doOnNext(savedReview->reviewSink.emitNext(savedReview, Sinks.EmitFailureHandler.FAIL_FAST))
                 .flatMap(ServerResponse.status(HttpStatus.CREATED)::bodyValue);
     }
 
@@ -67,8 +73,8 @@ public class ReviewHandler {
                .switchIfEmpty(Mono.error(new ReviewNotFoundException("Review not found for the given Review id: " + request.pathVariable("id"))));
         return existingReview.flatMap(review -> {
             return request.bodyToMono(Review.class).map(reqReview -> {
-                review.setComment(reqReview.getComment());
-                review.setRating(reqReview.getRating());
+                        review.setComment(reqReview.getComment());
+                        review.setRating(reqReview.getRating());
                 return review;
             })
             .flatMap(repo::save)
@@ -84,4 +90,9 @@ public class ReviewHandler {
                 .then(ServerResponse.noContent().build());
     }
 
+    public Mono<ServerResponse> getReviewsStream(ServerRequest serverRequest) {
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_NDJSON)
+                .body(Flux.just(reviewSink), Review.class);
+    }
 }
