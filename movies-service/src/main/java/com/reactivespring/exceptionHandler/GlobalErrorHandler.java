@@ -6,13 +6,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.support.WebExchangeBindException;
 
 @ControllerAdvice
 @Slf4j
 public class GlobalErrorHandler {
     @ExceptionHandler(MoviesInfoClientException.class)
-    public ResponseEntity<String> handleClientException(WebExchangeBindException ex){
+    public ResponseEntity<String> handleClientException(MoviesInfoClientException ex){
         log.error("Exception caught in handleRequestBodyError: {}", ex.getMessage(), ex);
         return ResponseEntity.status(ex.getStatusCode()).body(ex.getMessage());
     }
