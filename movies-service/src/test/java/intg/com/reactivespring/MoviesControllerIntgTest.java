@@ -85,5 +85,31 @@ public class MoviesControllerIntgTest {
 
     }
 
+    @DisplayName("WireMock Retriev Movie by ID Review404")
+    @Test
+    void retrieveMovieById_whenMovieNotFound_Review404() {
+        //given
+        var movieId = "abc";
+        //urlEqualTo
+        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/v1/movieinfos/" + movieId))
+                .willReturn(WireMock.aResponse().withHeader("Content-Type", "application/json")
+                        .withBodyFile("movieinfo.json")));
 
+        //urlPathEqualTo
+        WireMock.stubFor(WireMock.get(WireMock.urlPathEqualTo("/v1/review"))
+                .willReturn(WireMock.aResponse().withStatus(404)));
+
+        webTestClient.get()
+                .uri(MOVIES_URL+"/{id}", movieId)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(Movie.class)
+                .consumeWith(movieEntityExchangeResult -> {
+                    var movie = movieEntityExchangeResult.getResponseBody();
+                    Assertions.assertNotNull(movie);
+                    Assertions.assertTrue(movie.getReviewList().size()==0, "Wire Mock should return 0 reviews");
+                    Assertions.assertEquals("Batman Begins", movie.getMovieInfo().getName(), "Name should be equal");
+                });
+    }
 }
