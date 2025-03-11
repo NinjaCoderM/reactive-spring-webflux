@@ -1,5 +1,6 @@
 package com.reactivespring.client;
 
+import com.reactivespring.config.RetryUtil;
 import com.reactivespring.domain.MovieInfo;
 import com.reactivespring.exception.MoviesInfoClientException;
 import com.reactivespring.exception.MoviesInfoServerException;
@@ -45,9 +46,10 @@ public class MoviesInfoRestClient {
                             .flatMap(responseMessage -> Mono.error(new MoviesInfoServerException("ServerException in MoviesInfoService: "+responseMessage)));
                 })
                 .bodyToMono(MovieInfo.class)
-                .retryWhen(Retry.backoff(3, Duration.ofSeconds(1)).filter(throwable -> throwable instanceof MoviesInfoServerException)
-                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
-                                new MoviesInfoServerException("Max retries reached: " + retrySignal.totalRetries() +
-                                        " Cause: " + retrySignal.failure().getMessage())));
+                .retryWhen(RetryUtil.retrySpec(
+                        MoviesInfoServerException.class,
+                        retrySignal -> new MoviesInfoServerException("Max retries reached: " +
+                                retrySignal.totalRetries() + " Cause: " + retrySignal.failure().getMessage())
+                ));
     }
 }

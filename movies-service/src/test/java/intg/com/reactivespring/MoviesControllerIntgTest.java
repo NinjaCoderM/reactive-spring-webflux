@@ -37,6 +37,7 @@ public class MoviesControllerIntgTest {
 
     @BeforeEach
     void setUp() {
+        WireMock.reset();//wegen WireMock.verify
         webTestClient = webTestClient.mutate()
                 .responseTimeout(Duration.ofSeconds(10)) // Timeout auf 10 Sekunden setzen
                 .build();
@@ -92,7 +93,7 @@ public class MoviesControllerIntgTest {
                 });
                 // Achtung: gibt true oder false zurück, Assertion fehlt .returnResult().getResponseBody().equals("There is no MovieInfo available for the passed Id: abc");
                 // Achtung: gibt true oder false zurück, Assertion fehlt .isEqualTo("There is no MovieInfo available for the passed Id: abc");
-
+        WireMock.verify(1, WireMock.getRequestedFor(WireMock.urlEqualTo("/v1/movieinfos/" + movieId)));
     }
 
     @DisplayName("WireMock Retriev Movie by ID Review404")
@@ -172,7 +173,8 @@ public class MoviesControllerIntgTest {
                 .expectBody(String.class)
                 .consumeWith(stringEntityExchangeResult -> {
                     var error = stringEntityExchangeResult.getResponseBody();
-                    Assertions.assertEquals("ServerException in ReviewsService: MovieInfo Service Unavailable", error);
+                    Assertions.assertEquals("Max retries reached: 3 Cause: ServerException in ReviewsService: MovieInfo Service Unavailable", error);
                 });
+        WireMock.verify(4, WireMock.getRequestedFor(WireMock.urlPathEqualTo("/v1/review")));
     }
 }

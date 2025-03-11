@@ -1,6 +1,8 @@
 package com.reactivespring.client;
 
+import com.reactivespring.config.RetryUtil;
 import com.reactivespring.domain.Review;
+import com.reactivespring.exception.MoviesInfoServerException;
 import com.reactivespring.exception.ReviewsClientException;
 import com.reactivespring.exception.ReviewsServerException;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +53,12 @@ public class ReviewsRestClient {
                     return clientResponse.bodyToMono(String.class)
                             .flatMap(responseMessage -> Mono.error(new ReviewsServerException("ServerException in ReviewsService: " + responseMessage)));
                 })
-                .bodyToFlux(Review.class);
+                .bodyToFlux(Review.class)
+                .retryWhen(RetryUtil.retrySpec(
+                        ReviewsServerException.class,
+                        retrySignal -> new ReviewsServerException("Max retries reached: " +
+                                retrySignal.totalRetries() + " Cause: " + retrySignal.failure().getMessage())
+                ));
     }
 
 }
