@@ -56,4 +56,34 @@ public class MoviesControllerIntgTest {
 
         Assertions.assertTrue(Objects.requireNonNull(movie).getReviewList().size()==2, "Wire Mock should return two reviews");
     }
+    @DisplayName("WireMock Retriev Movie by ID 404")
+    @Test
+    void retrieveMovieById_whenMovieNotFound_404() {
+        //given
+        var movieId = "abc";
+        //urlEqualTo
+        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/v1/movieinfos/" + movieId))
+                .willReturn(WireMock.aResponse().withStatus(404)));
+
+        //urlPathEqualTo
+        WireMock.stubFor(WireMock.get(WireMock.urlPathEqualTo("/v1/review"))
+                .willReturn(WireMock.aResponse().withHeader("Content-Type", "application/json")
+                        .withBodyFile("reviews.json")));
+
+        webTestClient.get()
+                .uri(MOVIES_URL+"/{id}", movieId)
+                .exchange()
+                .expectStatus()
+                .is4xxClientError()
+                .expectBody(String.class)
+                .consumeWith(stringEntityExchangeResult -> {
+                    var error = stringEntityExchangeResult.getResponseBody();
+                    Assertions.assertEquals("There is no MovieInfo available for the passed Id: abc", error);
+                });
+                // Achtung: gibt true oder false zurück, Assertion fehlt .returnResult().getResponseBody().equals("There is no MovieInfo available for the passed Id: abc");
+                // Achtung: gibt true oder false zurück, Assertion fehlt .isEqualTo("There is no MovieInfo available for the passed Id: abc");
+
+    }
+
+
 }
