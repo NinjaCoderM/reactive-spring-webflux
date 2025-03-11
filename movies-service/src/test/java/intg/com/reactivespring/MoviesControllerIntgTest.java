@@ -138,4 +138,30 @@ public class MoviesControllerIntgTest {
                     Assertions.assertEquals("ServerException in MoviesInfoService: MovieInfo Service Unavailable", error);
                 });
     }
+
+    @DisplayName("WireMock Retriev Movie by ID Review 500")
+    @Test
+    void retrieveMovieById_when_Review500() {
+        //given
+        var movieId = "abc";
+        //urlEqualTo
+        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/v1/movieinfos/" + movieId))
+                .willReturn(WireMock.aResponse().withHeader("Content-Type", "application/json")
+                        .withBodyFile("movieinfo.json")));
+
+        //urlPathEqualTo
+        WireMock.stubFor(WireMock.get(WireMock.urlPathEqualTo("/v1/review"))
+                .willReturn(WireMock.aResponse().withStatus(500).withBody("MovieInfo Service Unavailable")));
+
+        webTestClient.get()
+                .uri(MOVIES_URL+"/{id}", movieId)
+                .exchange()
+                .expectStatus()
+                .is5xxServerError()
+                .expectBody(String.class)
+                .consumeWith(stringEntityExchangeResult -> {
+                    var error = stringEntityExchangeResult.getResponseBody();
+                    Assertions.assertEquals("ServerException in ReviewsService: MovieInfo Service Unavailable", error);
+                });
+    }
 }
