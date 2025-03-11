@@ -1,0 +1,59 @@
+package com.reactivespring;
+
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.reactivespring.domain.Movie;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import java.util.Objects;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
+//@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@AutoConfigureWebTestClient
+@AutoConfigureWireMock(port = 8084)
+@TestPropertySource(
+        properties = {
+                "restClient.movieInfoUrl=http://localhost:8084/v1/movieinfos",
+                "restClient.reviewsUrl=http://localhost:8084/v1/review"
+        }
+)
+public class MoviesControllerIntgTest {
+
+    @Autowired
+    WebTestClient webTestClient;
+
+    private final String MOVIES_URL = "/v1/movies";
+
+    @DisplayName("WireMock Retriev Movie by ID")
+    @Test
+    void retrieveMovieById() {
+        //given
+        var movieId = "abc";
+        //urlEqualTo
+        WireMock.stubFor(WireMock.get(WireMock.urlEqualTo("/v1/movieinfos/" + movieId))
+                .willReturn(WireMock.aResponse().withHeader("Content-Type", "application/json")
+                        .withBodyFile("movieinfo.json")));
+
+        //urlPathEqualTo
+        WireMock.stubFor(WireMock.get(WireMock.urlPathEqualTo("/v1/review"))
+                .willReturn(WireMock.aResponse().withHeader("Content-Type", "application/json")
+                        .withBodyFile("reviews.json")));
+
+        var movie =  webTestClient.get()
+                .uri(MOVIES_URL+"/{id}", movieId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Movie.class)
+                .returnResult().getResponseBody();
+
+        Assertions.assertTrue(Objects.requireNonNull(movie).getReviewList().size()==2, "Wire Mock should return two reviews");
+    }
+}

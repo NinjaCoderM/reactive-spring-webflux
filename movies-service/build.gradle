@@ -26,6 +26,9 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation 'org.mockito:mockito-inline:5.2.0'
+	//wiremock
+	testImplementation 'org.springframework.cloud:spring-cloud-starter-contract-stub-runner:4.2.0'
+
 }
 
 test {
