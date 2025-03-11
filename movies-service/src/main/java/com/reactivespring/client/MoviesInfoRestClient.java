@@ -10,6 +10,9 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+
+import java.time.Duration;
 
 @Component
 @Slf4j
@@ -41,6 +44,10 @@ public class MoviesInfoRestClient {
                     return clientResponse.bodyToMono(String.class)
                             .flatMap(responseMessage -> Mono.error(new MoviesInfoServerException("ServerException in MoviesInfoService: "+responseMessage)));
                 })
-                .bodyToMono(MovieInfo.class);
+                .bodyToMono(MovieInfo.class)
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(1)).filter(throwable -> throwable instanceof MoviesInfoServerException)
+                        .onRetryExhaustedThrow((retryBackoffSpec, retrySignal) ->
+                                new MoviesInfoServerException("Max retries reached: " + retrySignal.totalRetries() +
+                                        " Cause: " + retrySignal.failure().getMessage())));
     }
 }

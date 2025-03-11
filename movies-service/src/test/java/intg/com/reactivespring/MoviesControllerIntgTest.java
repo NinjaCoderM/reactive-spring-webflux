@@ -3,6 +3,7 @@ package com.reactivespring;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.reactivespring.domain.Movie;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,8 @@ import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import java.time.Duration;
 import java.util.Objects;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -31,6 +34,13 @@ public class MoviesControllerIntgTest {
     WebTestClient webTestClient;
 
     private final String MOVIES_URL = "/v1/movies";
+
+    @BeforeEach
+    void setUp() {
+        webTestClient = webTestClient.mutate()
+                .responseTimeout(Duration.ofSeconds(10)) // Timeout auf 10 Sekunden setzen
+                .build();
+    }
 
     @DisplayName("WireMock Retriev Movie by ID")
     @Test
@@ -135,8 +145,9 @@ public class MoviesControllerIntgTest {
                 .expectBody(String.class)
                 .consumeWith(stringEntityExchangeResult -> {
                     var error = stringEntityExchangeResult.getResponseBody();
-                    Assertions.assertEquals("ServerException in MoviesInfoService: MovieInfo Service Unavailable", error);
+                    Assertions.assertEquals("Max retries reached: 3 Cause: ServerException in MoviesInfoService: MovieInfo Service Unavailable", error);
                 });
+        WireMock.verify(4, WireMock.getRequestedFor(WireMock.urlEqualTo("/v1/movieinfos/" + movieId)));
     }
 
     @DisplayName("WireMock Retriev Movie by ID Review 500")
